@@ -25,8 +25,8 @@ export function LoginPage() {
           <LoginForm onSuccess={() => window.location.href = '/dashboard'} />
 
           <div className="mt-4 text-center text-sm">
-            <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Forgot password?
+            <Link to="/auth/reset-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+              Forgot your password?
             </Link>
           </div>
 
