@@ -1,0 +1,27 @@
+{
+  "ecosystem": "npm",
+  "config": {
+    "exa_search": true,
+    "brave_search": false,
+    "firecrawl": false,
+    "tavily_search": false
+  },
+  "questions": [
+    {
+      "text": "What are typical architectural patterns for MLOps copilot/assistant systems? How are they structured?",
+      "kind": "web"
+    },
+    {
+      "text": "What components are essential for an MLOps assistant platform? What are the major modules?",
+      "kind": "web"
+    },
+    {
+      "text": "What are common architectural patterns for AI-assisted DevOps/MLOps tools?",
+      "kind": "web"
+    },
+    {
+      "text": "How do MLOps copilots integrate with CI/CD pipelines and deployment workflows?",
+      "kind": "web"
+    }
+  ]
+}
