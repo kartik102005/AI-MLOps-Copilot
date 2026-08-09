@@ -1,15 +1,12 @@
-import { useNavigate, Link } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { LoginForm } from '../components/auth/LoginForm'
 
 export function LoginPage() {
-  const navigate = useNavigate()
   const { user } = useAuth()
 
-  // Redirect if already logged in
   if (user) {
-    navigate('/')
-    return null
+    return <Navigate to="/dashboard" replace />
   }
 
   return (
@@ -25,7 +22,13 @@ export function LoginPage() {
         </div>
 
         <div className="rounded-lg bg-white p-8 shadow-md">
-          <LoginForm onSuccess={() => navigate('/')} />
+          <LoginForm onSuccess={() => window.location.href = '/dashboard'} />
+
+          <div className="mt-4 text-center text-sm">
+            <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+              Forgot password?
+            </Link>
+          </div>
 
           <div className="mt-6 text-center text-sm text-gray-600">
             Don&apos;t have an account?{' '}

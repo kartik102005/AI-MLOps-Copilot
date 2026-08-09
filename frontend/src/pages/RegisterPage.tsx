@@ -1,15 +1,12 @@
-import { useNavigate, Link } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { RegisterForm } from '../components/auth/RegisterForm'
 
 export function RegisterPage() {
-  const navigate = useNavigate()
   const { user } = useAuth()
 
-  // Redirect if already logged in
   if (user) {
-    navigate('/')
-    return null
+    return <Navigate to="/dashboard" replace />
   }
 
   return (
@@ -25,7 +22,7 @@ export function RegisterPage() {
         </div>
 
         <div className="rounded-lg bg-white p-8 shadow-md">
-          <RegisterForm onSuccess={() => navigate('/')} />
+          <RegisterForm onSuccess={() => window.location.href = '/dashboard'} />
 
           <div className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{' '}
