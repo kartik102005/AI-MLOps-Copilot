@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { RegisterPage } from './pages/RegisterPage'
 import { LoginPage } from './pages/LoginPage'
+import { PasswordResetPage } from './pages/PasswordResetPage'
 import { DashboardPlaceholder } from './pages/DashboardPlaceholder'
 
 function HomePage() {
@@ -54,6 +55,7 @@ export function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/reset-password" element={<PasswordResetPage />} />
           <Route
             path="/dashboard"
             element={
