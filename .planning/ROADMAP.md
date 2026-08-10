@@ -134,7 +134,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. User Authentication | 3/3 | Complete | 2026-08-09 |
-| 2. User Profile | 0/2 | Not started | - |
+| 2. User Profile | 0/2 | Planned | - |
 | 3. Project Management | 0/3 | Not started | - |
 | 4. Dockerfile Generation | 0/2 | Not started | - |
 | 5. CI/CD Pipeline Generation | 0/2 | Not started | - |
