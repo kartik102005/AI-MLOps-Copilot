@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage'
 import { PasswordResetPage } from './pages/PasswordResetPage'
 import { PasswordUpdatePage } from './pages/PasswordUpdatePage'
 import { DashboardPlaceholder } from './pages/DashboardPlaceholder'
+import { ProfilePage } from './pages/ProfilePage'
 
 function HomePage() {
   const { user, loading } = useAuth()
@@ -63,6 +64,14 @@ export function App() {
             element={
               <ProtectedRoute>
                 <DashboardPlaceholder />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />
