@@ -8,7 +8,7 @@
 ## Phases
 
 - [x] **Phase 1: User Authentication** - Users can securely create accounts and log in
-- [ ] **Phase 2: User Profile** - Users can manage their profile information
+- [x] **Phase 2: User Profile** - Users can manage their profile information
 - [ ] **Phase 3: Project Management** - Users can create and manage ML projects
 - [ ] **Phase 4: Dockerfile Generation** - System generates valid, secure Dockerfiles from project analysis
 - [ ] **Phase 5: CI/CD Pipeline Generation** - System generates GitHub Actions workflows
@@ -46,8 +46,8 @@ Plans:
   4. Profile changes are reflected immediately across the app
 **Plans:** 2 plans
 Plans:
-- [ ] 02-01-PLAN.md — Tracer: AuthContext updateUser + ProfilePage with view mode
-- [ ] 02-02-PLAN.md — Profile edit form + password change section
+- [x] 02-01-PLAN.md — Tracer: AuthContext updateUser + ProfilePage with view mode
+- [x] 02-02-PLAN.md — Profile edit form + password change section
 
 ### Phase 3: Project Management
 **Goal:** Users can create, view, edit, and delete ML projects with file uploads
@@ -60,7 +60,11 @@ Plans:
   4. User can edit project information
   5. User can delete a project with confirmation
   6. User can upload project files or provide a repository URL
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 03-01-PLAN.md — Backend CRUD API + Supabase schema + project list page
+- [ ] 03-02-PLAN.md — GitHub clone integration + project detail page + create modal
+- [ ] 03-03-PLAN.md — AI analysis service + delete + error handling polish
 
 ### Phase 4: Dockerfile Generation
 **Goal:** System analyzes projects and generates secure, validated Dockerfiles
@@ -134,7 +138,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. User Authentication | 3/3 | Complete | 2026-08-09 |
-| 2. User Profile | 0/2 | Planned | - |
+| 2. User Profile | 2/2 | Complete | 2026-08-10 |
 | 3. Project Management | 0/3 | Not started | - |
 | 4. Dockerfile Generation | 0/2 | Not started | - |
 | 5. CI/CD Pipeline Generation | 0/2 | Not started | - |
