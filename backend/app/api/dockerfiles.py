@@ -8,6 +8,7 @@ import os
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
 
 from .dependencies import get_current_user
 from .projects import MEMORY_STORE
@@ -18,6 +19,11 @@ from ..models.dockerfile import (
 )
 from ..services.dockerfile_generator import DockerfileGenerator
 from ..services.hadolint_validator import HadolintValidator
+
+
+class DockerfileValidateRequest(BaseModel):
+    """Request to validate raw Dockerfile content."""
+    dockerfile_content: str
 
 router = APIRouter(prefix="/api/dockerfiles", tags=["dockerfiles"])
 
@@ -77,11 +83,11 @@ async def generate_dockerfile(
 
 @router.post("/validate", response_model=list[HadolintErrorResponse])
 async def validate_dockerfile(
-    dockerfile_content: str,
+    payload: DockerfileValidateRequest,
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> list[HadolintErrorResponse]:
     """Validate raw Dockerfile content using Hadolint."""
-    errors = validator.validate(dockerfile_content)
+    errors = validator.validate(payload.dockerfile_content)
     return [HadolintErrorResponse(**e.to_dict()) for e in errors]
 
 
