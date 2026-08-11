@@ -79,8 +79,8 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
   const [copiedStep, setCopiedStep] = useState<number | null>(null)
 
   // CI/CD Pipeline state
-  const [ciWorkflow, setCiWorkflow] = useState<string>('')
-  const [cdWorkflow, setCdWorkflow] = useState<string>('')
+  const [ciWorkflow, setCiWorkflow] = useState<string>(String(project.cicd_config?.ci_workflow || ''))
+  const [cdWorkflow, setCdWorkflow] = useState<string>(String(project.cicd_config?.cd_workflow || ''))
   const [ciValidationErrors, setCiValidationErrors] = useState<ValidationError[]>([])
   const [cdValidationErrors, setCdValidationErrors] = useState<ValidationError[]>([])
   const [isGeneratingCICD, setIsGeneratingCICD] = useState(false)
