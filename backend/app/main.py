@@ -7,6 +7,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.auth import router as auth_router
+from .api.projects import router as projects_router
+from .api.dockerfiles import router as dockerfiles_router
 
 load_dotenv()
 
@@ -30,6 +32,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router)
+app.include_router(projects_router)
+app.include_router(dockerfiles_router)
 
 
 @app.get("/api/health")
