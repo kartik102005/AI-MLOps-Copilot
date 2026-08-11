@@ -1,53 +1,16 @@
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { HomePage } from './pages/HomePage'
 import { RegisterPage } from './pages/RegisterPage'
 import { LoginPage } from './pages/LoginPage'
 import { PasswordResetPage } from './pages/PasswordResetPage'
 import { PasswordUpdatePage } from './pages/PasswordUpdatePage'
 import { DashboardPlaceholder } from './pages/DashboardPlaceholder'
 import { ProfilePage } from './pages/ProfilePage'
-
-function HomePage() {
-  const { user, loading } = useAuth()
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Loading...</p>
-      </div>
-    )
-  }
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">AI MLOps Copilot</h1>
-        <p className="mt-4 text-gray-600">
-          Intelligent ML operations platform
-        </p>
-        <div className="mt-8 space-x-4">
-          <Link
-            to="/login"
-            className="rounded-md bg-indigo-600 px-4 py-2 text-white font-medium hover:bg-indigo-700"
-          >
-            Sign In
-          </Link>
-          <Link
-            to="/register"
-            className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 font-medium hover:bg-gray-100"
-          >
-            Register
-          </Link>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { ProjectListPage } from './pages/ProjectListPage'
+import { ProjectDetailPage } from './pages/ProjectDetailPage'
+import { DockerfilePage } from './pages/DockerfilePage'
 
 export function App() {
   return (
@@ -72,6 +35,30 @@ export function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects"
+            element={
+              <ProtectedRoute>
+                <ProjectListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:id"
+            element={
+              <ProtectedRoute>
+                <ProjectDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:id/dockerfile"
+            element={
+              <ProtectedRoute>
+                <DockerfilePage />
               </ProtectedRoute>
             }
           />
