@@ -9,7 +9,7 @@
 
 - [x] **Phase 1: User Authentication** - Users can securely create accounts and log in
 - [x] **Phase 2: User Profile** - Users can manage their profile information
-- [ ] **Phase 3: Project Management** - Users can create and manage ML projects
+- [x] **Phase 3: Project Management** - Users can create and manage ML projects
 - [ ] **Phase 4: Dockerfile Generation** - System generates valid, secure Dockerfiles from project analysis
 - [ ] **Phase 5: CI/CD Pipeline Generation** - System generates GitHub Actions workflows
 - [ ] **Phase 6: Deployment Guidance** - Users receive actionable deployment instructions
@@ -62,9 +62,9 @@ Plans:
   6. User can upload project files or provide a repository URL
 **Plans:** 3 plans
 Plans:
-- [ ] 03-01-PLAN.md — Backend CRUD API + Supabase schema + project list page
-- [ ] 03-02-PLAN.md — GitHub clone integration + project detail page + create modal
-- [ ] 03-03-PLAN.md — AI analysis service + delete + error handling polish
+- [x] 03-01-PLAN.md — Backend CRUD API + Supabase schema + project list page
+- [x] 03-02-PLAN.md — GitHub clone integration + project detail page + create modal
+- [x] 03-03-PLAN.md — AI analysis service + delete + error handling polish
 
 ### Phase 4: Dockerfile Generation
 **Goal:** System analyzes projects and generates secure, validated Dockerfiles
@@ -76,7 +76,9 @@ Plans:
   3. User can view and edit the generated Dockerfile in-browser
   4. User can download the generated Dockerfile
   5. Generated Dockerfile follows security best practices (non-root user, pinned versions)
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 04-01-PLAN.md — Backend services (AI generation + Hadolint validation) + API + frontend editor components
 
 ### Phase 5: CI/CD Pipeline Generation
 **Goal:** System generates validated GitHub Actions workflows for projects
@@ -140,7 +142,7 @@ Plans:
 | 1. User Authentication | 3/3 | Complete | 2026-08-09 |
 | 2. User Profile | 2/2 | Complete | 2026-08-10 |
 | 3. Project Management | 0/3 | Not started | - |
-| 4. Dockerfile Generation | 0/2 | Not started | - |
+| 4. Dockerfile Generation | 0/1 | Planned | - |
 | 5. CI/CD Pipeline Generation | 0/2 | Not started | - |
 | 6. Deployment Guidance | 0/2 | Not started | - |
 | 7. Log Analysis | 0/2 | Not started | - |
