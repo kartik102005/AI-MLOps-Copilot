@@ -3,14 +3,15 @@
 import os
 
 from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.auth import router as auth_router
 from .api.projects import router as projects_router
 from .api.dockerfiles import router as dockerfiles_router
-
-load_dotenv()
+from .api.cicd import router as cicd_router
 
 app = FastAPI(
     title="AI MLOps Copilot API",
@@ -34,6 +35,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(projects_router)
 app.include_router(dockerfiles_router)
+app.include_router(cicd_router)
 
 
 @app.get("/api/health")
