@@ -24,24 +24,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session: initialSession } } = await supabase.auth.getSession()
-      setSession(initialSession)
-      setUser(initialSession?.user ?? null)
-      setLoading(false)
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession()
+        setSession(initialSession)
+        setUser(initialSession?.user ?? null)
+      } catch (err) {
+        console.warn('Supabase auth session fetch fallback:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
     getInitialSession()
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
-        setSession(newSession)
-        setUser(newSession?.user ?? null)
-        setLoading(false)
-      }
-    )
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event, newSession) => {
+          setSession(newSession)
+          setUser(newSession?.user ?? null)
+          setLoading(false)
+        }
+      )
 
-    return () => subscription.unsubscribe()
+      return () => subscription?.unsubscribe()
+    } catch (err) {
+      console.warn('Supabase auth state listener fallback:', err)
+      setLoading(false)
+    }
   }, [supabase])
 
   const signUp = async (email: string, password: string, fullName: string) => {
