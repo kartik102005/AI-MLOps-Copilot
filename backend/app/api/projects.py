@@ -230,14 +230,13 @@ async def list_projects(
     sb = get_supabase_client()
     if sb:
         try:
-            response = (
-                sb.table("projects")
-                .select("*")
-                .eq("user_id", user_id)
-                .order("updated_at", desc=True)
-                .execute()
-            )
-            if response.data is not None:
+            # Query projects belonging to user or all projects if user_id is default
+            query = sb.table("projects").select("*")
+            if user_id != "00000000-0000-0000-0000-000000000000":
+                query = query.eq("user_id", user_id)
+            response = query.order("updated_at", desc=True).execute()
+
+            if response.data:
                 for row in response.data:
                     pid = str(row["id"])
                     combined_projects[pid] = {
@@ -255,7 +254,12 @@ async def list_projects(
                         "updated_at": str(row["updated_at"]),
                     }
         except Exception as e:
-            print(f"Supabase select fallback to local store: {e}")
+            print(f"Supabase select fallback: {e}")
+
+    # Fallback: if no project matched specific user_id, return all available projects in MEMORY_STORE
+    if not combined_projects and MEMORY_STORE:
+        for pid, p in MEMORY_STORE.items():
+            combined_projects[pid] = p
 
     results_list = list(combined_projects.values())
     results_list.sort(key=lambda x: str(x.get("updated_at")), reverse=True)
