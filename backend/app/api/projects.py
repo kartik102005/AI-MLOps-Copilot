@@ -230,13 +230,16 @@ async def list_projects(
     sb = get_supabase_client()
     if sb:
         try:
-            # Query projects belonging to user or all projects if user_id is default
-            query = sb.table("projects").select("*")
-            if user_id != "00000000-0000-0000-0000-000000000000":
-                query = query.eq("user_id", user_id)
-            response = query.order("updated_at", desc=True).execute()
+            # Query projects belonging to user
+            response = (
+                sb.table("projects")
+                .select("*")
+                .eq("user_id", user_id)
+                .order("updated_at", desc=True)
+                .execute()
+            )
 
-            if response.data:
+            if response.data and len(response.data) > 0:
                 for row in response.data:
                     pid = str(row["id"])
                     combined_projects[pid] = {
@@ -253,6 +256,32 @@ async def list_projects(
                         "created_at": str(row["created_at"]),
                         "updated_at": str(row["updated_at"]),
                     }
+
+            # If user has no specific projects yet, fetch all platform projects from Supabase
+            if not combined_projects:
+                all_resp = (
+                    sb.table("projects")
+                    .select("*")
+                    .order("updated_at", desc=True)
+                    .execute()
+                )
+                if all_resp.data:
+                    for row in all_resp.data:
+                        pid = str(row["id"])
+                        combined_projects[pid] = {
+                            "id": pid,
+                            "user_id": str(row["user_id"]),
+                            "name": row["name"],
+                            "description": row.get("description"),
+                            "repo_url": row["repo_url"],
+                            "status": row.get("status", "created"),
+                            "analysis_results": row.get("analysis_results"),
+                            "dockerfile_content": row.get("dockerfile_content"),
+                            "cicd_config": row.get("cicd_config"),
+                            "deployment_checklist_state": row.get("deployment_checklist_state"),
+                            "created_at": str(row["created_at"]),
+                            "updated_at": str(row["updated_at"]),
+                        }
         except Exception as e:
             print(f"Supabase select fallback: {e}")
 
