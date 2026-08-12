@@ -78,8 +78,8 @@ export const ProjectDetailPage: React.FC = () => {
   return (
     <AppLayout>
       <div className="mx-auto w-full max-w-7xl space-y-6 animate-fade-in">
-        {/* Breadcrumb Navigation & Top Action */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border-light">
+        {/* Breadcrumb Navigation */}
+        <div className="pb-2 border-b border-border-light">
           <nav className="flex items-center space-x-2 text-xs font-semibold text-text-secondary">
             <Link to="/dashboard" className="hover:text-indeed-blue">
               Dashboard
@@ -91,29 +91,9 @@ export const ProjectDetailPage: React.FC = () => {
             <span>/</span>
             <span className="font-bold text-text-primary truncate max-w-xs">{project.name}</span>
           </nav>
-          <div className="flex items-center gap-3">
-            <Link
-              to={`/projects/${project.id}/dockerfile`}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-indeed-blue px-3 py-1.5 text-xs font-bold text-white shadow-subtle hover:bg-indeed-blue-hover transition-colors"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-              <span>Generate Dockerfile</span>
-            </Link>
-            <a
-              href={project.repo_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border-medium bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:border-indeed-blue transition-colors shadow-subtle"
-            >
-              <IconExternalLink className="h-3.5 w-3.5 text-text-secondary" />
-              <span>Open on GitHub</span>
-            </a>
-          </div>
         </div>
 
-        {/* Project Header Info */}
+        {/* Project Header Info with GitHub Button on Right */}
         <div className="rounded-2xl border border-border-light bg-surface p-6 shadow-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
@@ -123,6 +103,18 @@ export const ProjectDetailPage: React.FC = () => {
               </span>
             </div>
             <p className="mt-1 text-sm font-mono text-text-secondary">{project.repo_url}</p>
+          </div>
+
+          <div className="shrink-0">
+            <a
+              href={project.repo_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-border-medium bg-white px-4 py-2.5 text-xs font-bold text-text-primary hover:border-indeed-blue hover:text-indeed-blue shadow-subtle transition-all cursor-pointer"
+            >
+              <IconExternalLink className="h-4 w-4 text-text-secondary" />
+              <span>GitHub Repository</span>
+            </a>
           </div>
         </div>
 

@@ -4,6 +4,7 @@ export interface CICDToolbarProps {
   ciWorkflow: string
   cdWorkflow: string
   onRegenerate: () => void
+  onSave?: () => void
   isGenerating: boolean
   ciErrors: Array<{ line: number; message: string; level: string }>
   cdErrors: Array<{ line: number; message: string; level: string }>
@@ -14,6 +15,7 @@ export const CICDToolbar: React.FC<CICDToolbarProps> = ({
   ciWorkflow,
   cdWorkflow,
   onRegenerate,
+  onSave,
   isGenerating = false,
   ciErrors = [],
   cdErrors = [],
@@ -72,6 +74,20 @@ export const CICDToolbar: React.FC<CICDToolbarProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {onSave && (
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={isGenerating || (!ciWorkflow && !cdWorkflow)}
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-subtle transition-all hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Save Workflows
+          </button>
+        )}
+
         {/* Regenerate */}
         <button
           type="button"

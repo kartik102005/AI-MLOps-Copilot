@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+backend/.venv/
+venv/
+ENV/
+
+# Local Clone & Runtime Database Scratch Files
+backend/clones/
+backend/projects_data.json
+
+# Python bytecode & cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+
+# Build outputs
+frontend/dist/
+dist/
+build/
+*.tsbuildinfo
+
+# Environment & Secret files (CRITICAL SECURITY)
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+*.pem
+*.key
+*.p12
+
+# Database & SQLite files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs & temporary files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.planning/

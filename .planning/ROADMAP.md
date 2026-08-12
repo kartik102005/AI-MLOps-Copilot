@@ -11,11 +11,11 @@
 - [x] **Phase 2: User Profile** - Users can manage their profile information
 - [x] **Phase 3: Project Management** - Users can create and manage ML projects
 - [x] **Phase 4: Dockerfile Generation** - System generates valid, secure Dockerfiles from project analysis
-- [ ] **Phase 5: CI/CD Pipeline Generation** - System generates GitHub Actions workflows
-- [ ] **Phase 6: Deployment Guidance** - Users receive actionable deployment instructions
-- [ ] **Phase 7: Log Analysis** - Users can upload and analyze deployment logs
-- [ ] **Phase 8: AI Troubleshooting** - System provides AI-powered issue diagnosis and fixes
-- [ ] **Phase 9: Dashboard & Integration** - Users get a unified view of all platform activity
+- [x] **Phase 5: CI/CD Pipeline Generation** - System generates GitHub Actions workflows
+- [x] **Phase 6: Deployment Guidance** - Users receive actionable deployment instructions
+- [x] **Phase 7: Log Analysis** - Users can upload and analyze deployment logs
+- [x] **Phase 8: AI Troubleshooting** - System provides AI-powered issue diagnosis and fixes
+- [x] **Phase 9: Dashboard & Integration** - Users get a unified view of all platform activity
 
 ## Phase Details
 

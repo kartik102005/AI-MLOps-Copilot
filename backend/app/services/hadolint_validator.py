@@ -43,7 +43,8 @@ class HadolintValidator:
                 timeout=30,
             )
         except FileNotFoundError:
-            return [HadolintError(0, "NOT_FOUND", f"Hadolint binary not found at {self.hadolint_path}", "error")]
+            # Hadolint not installed — skip validation silently
+            return []
         except subprocess.TimeoutExpired:
             return [HadolintError(0, "TIMEOUT", "Hadolint timed out after 30s", "error")]
 

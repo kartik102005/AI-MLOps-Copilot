@@ -10,10 +10,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-bg-page">
         <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
-          <p className="mt-4 text-gray-600">Loading session...</p>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-indeed-blue border-t-transparent" />
+          <p className="mt-4 text-text-secondary">Loading session...</p>
         </div>
       </div>
     )

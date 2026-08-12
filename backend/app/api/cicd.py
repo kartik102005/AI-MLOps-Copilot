@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import PlainTextResponse
 
 from .dependencies import get_current_user
-from .projects import MEMORY_STORE
+from .projects import MEMORY_STORE, _save_memory_store, get_supabase_client
 from ..models.cicd import (
     CICDGenerateRequest,
     CICDResponse,
@@ -57,12 +57,25 @@ async def generate_workflows(
     ci_errors = validator.validate(result.ci_workflow)
     cd_errors = validator.validate(result.cd_workflow)
 
-    # Store in cicd_config
+    # Store and persist in cicd_config
     if project_id in MEMORY_STORE:
         existing_config = MEMORY_STORE[project_id].get("cicd_config") or {}
         existing_config["ci_workflow"] = result.ci_workflow
         existing_config["cd_workflow"] = result.cd_workflow
         MEMORY_STORE[project_id]["cicd_config"] = existing_config
+        _save_memory_store()
+
+    # Update Supabase if available
+    sb = get_supabase_client()
+    if sb:
+        try:
+            existing_config = (MEMORY_STORE.get(project_id) or {}).get("cicd_config") or {
+                "ci_workflow": result.ci_workflow,
+                "cd_workflow": result.cd_workflow,
+            }
+            sb.table("projects").update({"cicd_config": existing_config}).eq("id", project_id).execute()
+        except Exception as e:
+            print(f"Supabase cicd_config update error: {e}")
 
     return CICDResponse(
         ci_workflow=result.ci_workflow,

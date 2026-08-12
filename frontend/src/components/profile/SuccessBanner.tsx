@@ -5,12 +5,12 @@ interface SuccessBannerProps {
 
 export function SuccessBanner({ message, onDismiss }: SuccessBannerProps) {
   return (
-    <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 flex items-center justify-between">
+    <div className="rounded-md bg-success-light p-3 text-sm text-success flex items-center justify-between">
       <span>{message}</span>
       <button
         type="button"
         onClick={onDismiss}
-        className="ml-3 text-green-500 hover:text-green-700 focus:outline-none"
+        className="ml-3 text-success hover:text-success focus:outline-none"
       >
         <span className="sr-only">Dismiss</span>
         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

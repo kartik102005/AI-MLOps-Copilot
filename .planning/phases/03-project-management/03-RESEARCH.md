@@ -529,22 +529,22 @@ export function ProjectCard({ id, name, description, status, updatedAt }: Projec
 
 **If this table is empty:** All claims in this research were verified or cited — no user confirmation needed.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **GitHub token encryption method**
+1. **GitHub token encryption method** — RESOLVED
    - What we know: Tokens need to be encrypted before storage
-   - What's unclear: Which encryption library to use, key management
-   - Recommendation: Use Supabase's built-in encryption or application-level encryption with environment variable keys
+   - Resolution: Use application-level AES-256-GCM encryption via Python `cryptography` library. Encryption key stored in `GITHUB_TOKEN_ENCRYPTION_KEY` env var (Fernet symmetric). Tokens encrypted before Supabase insert, decrypted at clone-time. Supabase column stores ciphertext + nonce.
+   - Rationale: Supabase built-in encryption requires paid tier column-level encryption. Fernet is simple, auditable, and standard for this use case.
 
-2. **Clone storage location**
+2. **Clone storage location** — RESOLVED
    - What we know: D-07 specifies `./clones/` directory
-   - What's unclear: Disk space management, cleanup strategy
-   - Recommendation: Implement cleanup job for old clones, monitor disk usage
+   - Resolution: Local `./clones/` directory under project root. Each clone in `./clones/{project_id}/`. Background cleanup job deletes clones older than 24 hours via FastAPI `on_event("startup")` scheduled task. Disk usage logged. Production: mount a dedicated volume or use cloud storage.
+   - Rationale: Simple local storage for MVP. Cleanup job prevents disk bloat. Production deployment can mount a persistent volume.
 
-3. **AI analysis model selection**
+3. **AI analysis model selection** — RESOLVED
    - What we know: D-11 specifies OpenAI-compatible API
-   - What's unclear: Which specific model to use, cost implications
-   - Recommendation: Start with gpt-4o-mini for cost efficiency, make configurable
+   - Resolution: Default model is `gpt-4o-mini` for cost efficiency. Model configurable via `AI_MODEL` env var (default: `gpt-4o-mini`). API endpoint configurable via `OPENAI_API_BASE` env var pointing to opencode API. Cost estimate: ~$0.01–0.05 per repo analysis depending on size.
+   - Rationale: gpt-4o-mini is fast, cheap, and capable for code analysis. Making it configurable allows switching models without code changes.
 
 ## Environment Availability
 

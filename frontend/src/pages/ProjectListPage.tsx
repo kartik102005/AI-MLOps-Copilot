@@ -23,6 +23,8 @@ export interface Project {
   status: string
   analysis_results?: Record<string, unknown> | null
   dockerfile_content?: string | null
+  cicd_config?: Record<string, unknown> | null
+  deployment_checklist_state?: Record<string, boolean> | null
   created_at: string
   updated_at: string
 }

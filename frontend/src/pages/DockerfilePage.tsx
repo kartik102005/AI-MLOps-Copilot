@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { fetchApi } from '../lib/api'
 import { DockerfileEditor } from '../components/docker/DockerfileEditor'
 import { DockerfileToolbar } from '../components/docker/DockerfileToolbar'
 import { ValidationErrors } from '../components/docker/ValidationErrors'
@@ -21,6 +23,7 @@ interface GenerateResponse {
 
 export const DockerfilePage: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>()
+  const { session } = useAuth()
   const [dockerfile, setDockerfile] = useState('')
   const [dockerignore, setDockerignore] = useState('')
   const [errors, setErrors] = useState<ValidationError[]>([])
@@ -35,11 +38,11 @@ export const DockerfilePage: React.FC = () => {
     setIsLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/dockerfiles/generate`, {
+      const res = await fetchApi('/api/dockerfiles/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: projectId }),
-      })
+      }, session?.access_token)
       if (!res.ok) {
         const body = await res.json().catch(() => null)
         throw new Error(body?.detail || `Failed to generate Dockerfile (${res.status})`)
@@ -55,7 +58,7 @@ export const DockerfilePage: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [projectId])
+  }, [projectId, session?.access_token])
 
   useEffect(() => {
     fetchDockerfile()

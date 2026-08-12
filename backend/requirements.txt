@@ -4,3 +4,6 @@ supabase>=2.15.0
 pyjwt>=2.10.0
 python-dotenv>=1.1.0
 pydantic>=2.11.0
+ghdigest>=0.1.0
+openai>=1.0.0
+gitpython>=3.1.0

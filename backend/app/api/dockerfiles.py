@@ -11,7 +11,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from .dependencies import get_current_user
-from .projects import MEMORY_STORE
+from .projects import MEMORY_STORE, _save_memory_store, get_supabase_client
 from ..models.dockerfile import (
     DockerfileGenerateRequest,
     DockerfileResponse,
@@ -68,9 +68,17 @@ async def generate_dockerfile(
     errors = validator.validate(result.dockerfile_content)
     error_responses = [HadolintErrorResponse(**e.to_dict()) for e in errors]
 
-    # Optionally store generated content back to project
+    # Store and persist generated content back to project
     if project_id in MEMORY_STORE:
         MEMORY_STORE[project_id]["dockerfile_content"] = result.dockerfile_content
+        _save_memory_store()
+
+    sb = get_supabase_client()
+    if sb:
+        try:
+            sb.table("projects").update({"dockerfile_content": result.dockerfile_content}).eq("id", project_id).execute()
+        except Exception as e:
+            print(f"Supabase dockerfile_content update error: {e}")
 
     return DockerfileResponse(
         dockerfile_content=result.dockerfile_content,

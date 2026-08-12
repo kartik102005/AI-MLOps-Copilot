@@ -8,6 +8,9 @@ import { ValidationErrors } from '../docker/ValidationErrors'
 import { CICDEditor } from '../cicd/CICDEditor'
 import { CICDToolbar } from '../cicd/CICDToolbar'
 import { CICDEditorValidationErrors } from '../cicd/ValidationErrors'
+import { CICDCustomizeForm } from '../cicd/CICDCustomizeForm'
+import { SecretsDisplay } from '../cicd/SecretsDisplay'
+import { DeploymentGuidance } from '../deployment/DeploymentGuidance'
 import { useAuth } from '../../contexts/AuthContext'
 import { fetchApi } from '../../lib/api'
 import {
@@ -19,6 +22,7 @@ import {
   IconActivity,
   IconCpu,
   IconCopy,
+  IconServer,
 } from '../ui/Icons'
 
 interface ValidationError {
@@ -48,7 +52,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
   onDeleteSuccess,
 }) => {
   const { session } = useAuth()
-  const [activeTab, setActiveTab] = useState<'overview' | 'files' | 'analysis' | 'docker' | 'cicd' | 'settings'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'files' | 'analysis' | 'docker' | 'cicd' | 'deployment' | 'settings'>('overview')
 
   // Settings tab form state
   const [editName, setEditName] = useState(project.name)
@@ -91,6 +95,19 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
       fetchFiles()
     }
   }, [activeTab, project.id, session?.access_token])
+
+  useEffect(() => {
+    if (project.cicd_config) {
+      setCiWorkflow(String(project.cicd_config.ci_workflow || ''))
+      setCdWorkflow(String(project.cicd_config.cd_workflow || ''))
+    }
+  }, [project.cicd_config])
+
+  useEffect(() => {
+    if (project.dockerfile_content) {
+      setDockerfileContent(project.dockerfile_content)
+    }
+  }, [project.dockerfile_content])
 
   const fetchFiles = async () => {
     setIsLoadingFiles(true)
@@ -163,16 +180,20 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
     }
   }
 
-  const handleGenerateCICD = async () => {
+  const handleGenerateCICD = async (customPrompt?: string) => {
     setIsGeneratingCICD(true)
     setCicdError(null)
     try {
+      const body: Record<string, unknown> = { project_id: project.id }
+      if (customPrompt) {
+        body.custom_prompt = customPrompt
+      }
       const res = await fetchApi(
         '/api/cicd/generate',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project_id: project.id }),
+          body: JSON.stringify(body),
         },
         session?.access_token
       )
@@ -194,6 +215,36 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
       })
     } catch (err) {
       setCicdError(err instanceof Error ? err.message : 'Error generating CI/CD workflows')
+    } finally {
+      setIsGeneratingCICD(false)
+    }
+  }
+
+  const handleSaveCICDWorkflows = async () => {
+    setIsGeneratingCICD(true)
+    setCicdError(null)
+    try {
+      const updatedConfig = {
+        ...(project.cicd_config || {}),
+        ci_workflow: ciWorkflow,
+        cd_workflow: cdWorkflow,
+      }
+      const res = await fetchApi(
+        `/api/projects/${project.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cicd_config: updatedConfig }),
+        },
+        session?.access_token
+      )
+      if (!res.ok) {
+        throw new Error('Failed to save CI/CD workflows')
+      }
+      const updatedProject = await res.json()
+      onUpdateProject(updatedProject)
+    } catch (err) {
+      setCicdError(err instanceof Error ? err.message : 'Error saving CI/CD workflows')
     } finally {
       setIsGeneratingCICD(false)
     }
@@ -222,6 +273,10 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
     } catch (err) {
       setCicdError(err instanceof Error ? err.message : `Error downloading ${type} workflow`)
     }
+  }
+
+  const handleCustomRegenerate = (prompt: string) => {
+    handleGenerateCICD(prompt)
   }
 
   const handleSettingsSubmit = async (e: React.FormEvent) => {
@@ -277,6 +332,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
     { id: 'analysis', label: 'AI Analysis', Icon: IconSparkles },
     { id: 'docker', label: 'Dockerfile & Container', Icon: IconCpu },
     { id: 'cicd', label: 'CI/CD Pipeline', Icon: IconActivity },
+    { id: 'deployment', label: 'Deployment', Icon: IconServer },
     { id: 'settings', label: 'Settings', Icon: IconSettings },
   ] as const
 
@@ -351,12 +407,15 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
                 </div>
 
                 {/* Stage 4: CI/CD Pipeline */}
-                <div className={`rounded-xl p-4 border transition-all ${project.cicd_config ? 'bg-success-light border-success/20' : 'bg-gray-50 border-border-light opacity-60'}`}>
+                <div 
+                  className={`rounded-xl p-4 border transition-all ${project.cicd_config ? 'bg-success-light border-success/20 cursor-pointer hover:shadow-md' : 'bg-gray-50 border-border-light opacity-60'}`}
+                  onClick={() => { if (project.cicd_config) setActiveTab('cicd') }}
+                >
                   <div className={`text-xs font-bold flex items-center gap-1.5 ${project.cicd_config ? 'text-success' : 'text-text-muted'}`}>
                     <IconActivity className="h-4 w-4" />
                     <span>04. CI/CD Deploy</span>
                   </div>
-                  <div className="text-sm font-extrabold text-text-muted mt-1">
+                  <div className={`text-sm font-extrabold mt-1 ${project.cicd_config ? 'text-text-primary' : 'text-text-muted'}`}>
                     {project.cicd_config ? 'Workflow Ready' : 'Pending Pipeline'}
                   </div>
                 </div>
@@ -702,7 +761,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
 
               <button
                 type="button"
-                onClick={handleGenerateCICD}
+                onClick={() => handleGenerateCICD()}
                 disabled={isGeneratingCICD}
                 className="inline-flex items-center gap-2 rounded-xl bg-indeed-blue px-6 py-3 text-xs font-bold text-white shadow-medium hover:bg-indeed-blue-hover disabled:opacity-50 transition-colors focus-ring cursor-pointer shrink-0"
               >
@@ -719,11 +778,18 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
 
             {(ciWorkflow || cdWorkflow) ? (
               <div className="space-y-6">
+                {/* Customize Workflows Form */}
+                <CICDCustomizeForm
+                  onRegenerate={handleCustomRegenerate}
+                  isGenerating={isGeneratingCICD}
+                />
+
                 {/* CI/CD Toolbar Controls */}
                 <CICDToolbar
                   ciWorkflow={ciWorkflow}
                   cdWorkflow={cdWorkflow}
                   onRegenerate={handleGenerateCICD}
+                  onSave={handleSaveCICDWorkflows}
                   isGenerating={isGeneratingCICD}
                   ciErrors={ciValidationErrors}
                   cdErrors={cdValidationErrors}
@@ -755,6 +821,9 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
                 {cdValidationErrors.length > 0 && (
                   <CICDEditorValidationErrors errors={cdValidationErrors} />
                 )}
+
+                {/* Required GitHub Secrets */}
+                <SecretsDisplay />
               </div>
             ) : (
               <div className="rounded-2xl border-2 border-dashed border-border-medium p-12 text-center bg-surface shadow-subtle space-y-4">
@@ -770,7 +839,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
                 <div className="pt-2">
                   <button
                     type="button"
-                    onClick={handleGenerateCICD}
+                    onClick={() => handleGenerateCICD()}
                     disabled={isGeneratingCICD}
                     className="inline-flex items-center gap-2 rounded-xl bg-indeed-blue px-6 py-3 text-xs font-bold text-white shadow-subtle hover:bg-indeed-blue-hover transition-colors cursor-pointer"
                   >
@@ -781,6 +850,14 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
               </div>
             )}
           </div>
+        )}
+
+        {/* DEPLOYMENT TAB */}
+        {activeTab === 'deployment' && (
+          <DeploymentGuidance 
+            project={project} 
+            onUpdateProject={onUpdateProject} 
+          />
         )}
 
         {/* SETTINGS TAB */}

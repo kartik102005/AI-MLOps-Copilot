@@ -1,36 +1,34 @@
-import { Navigate, Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { PasswordResetRequestForm } from '../components/auth/PasswordResetRequestForm'
+import { Link } from 'react-router-dom'
+import { PasswordResetForm } from '../components/auth/PasswordResetForm'
+import { AuthLayout } from '../components/auth/AuthLayout'
 
 export function PasswordResetPage() {
-  const { user } = useAuth()
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />
-  }
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h1 className="text-center text-3xl font-bold tracking-tight text-gray-900">
-            AI MLOps Copilot
-          </h1>
-          <h2 className="mt-2 text-center text-sm text-gray-600">
-            Reset your password
+    <AuthLayout>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-3xl font-extrabold tracking-tight text-text-primary">
+            Reset Password
           </h2>
+          <p className="text-sm font-medium text-text-secondary">
+            Enter your registered email address below and we'll send you an instant password recovery link.
+          </p>
         </div>
 
-        <div className="rounded-lg bg-white p-8 shadow-md">
-          <PasswordResetRequestForm />
+        <div className="rounded-2xl bg-surface p-8 shadow-medium border border-border-light space-y-6">
+          <PasswordResetForm />
 
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Back to login
+          <div className="text-center text-xs text-text-secondary pt-2 border-t border-border-light">
+            Remembered your password?{' '}
+            <Link
+              to="/login"
+              className="font-bold text-indeed-blue hover:underline transition-colors"
+            >
+              Back to Sign In
             </Link>
           </div>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   )
 }

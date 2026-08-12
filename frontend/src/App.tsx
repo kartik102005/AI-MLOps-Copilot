@@ -6,11 +6,13 @@ import { RegisterPage } from './pages/RegisterPage'
 import { LoginPage } from './pages/LoginPage'
 import { PasswordResetPage } from './pages/PasswordResetPage'
 import { PasswordUpdatePage } from './pages/PasswordUpdatePage'
-import { DashboardPlaceholder } from './pages/DashboardPlaceholder'
+import { DashboardPage } from './pages/DashboardPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { ProjectListPage } from './pages/ProjectListPage'
 import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { DockerfilePage } from './pages/DockerfilePage'
+import { LogAnalysisPage } from './pages/LogAnalysisPage'
+import { AICopilotPage } from './pages/AICopilotPage'
 
 export function App() {
   return (
@@ -26,7 +28,7 @@ export function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPlaceholder />
+                <DashboardPage />
               </ProtectedRoute>
             }
           />
@@ -59,6 +61,22 @@ export function App() {
             element={
               <ProtectedRoute>
                 <DockerfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/logs"
+            element={
+              <ProtectedRoute>
+                <LogAnalysisPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/copilot"
+            element={
+              <ProtectedRoute>
+                <AICopilotPage />
               </ProtectedRoute>
             }
           />

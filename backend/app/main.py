@@ -12,6 +12,8 @@ from .api.auth import router as auth_router
 from .api.projects import router as projects_router
 from .api.dockerfiles import router as dockerfiles_router
 from .api.cicd import router as cicd_router
+from .api.ai import router as ai_router
+from .api.dashboard import router as dashboard_router
 
 app = FastAPI(
     title="AI MLOps Copilot API",
@@ -36,6 +38,8 @@ app.include_router(auth_router)
 app.include_router(projects_router)
 app.include_router(dockerfiles_router)
 app.include_router(cicd_router)
+app.include_router(ai_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/api/health")

@@ -17,7 +17,7 @@ export function LogoutButton({ className = '' }: LogoutButtonProps) {
   return (
     <button
       onClick={handleLogout}
-      className={`rounded-md bg-red-600 px-4 py-2 text-white font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors ${className}`}
+      className={`rounded-md border border-border-light bg-white px-4 py-2 text-text-primary font-bold transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indeed-blue focus:ring-offset-2 ${className}`}
     >
       Sign Out
     </button>
