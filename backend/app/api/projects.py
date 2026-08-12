@@ -437,23 +437,6 @@ async def get_project(
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> ProjectResponse:
     """Get project details by project ID."""
-    if project_id in MEMORY_STORE:
-        p = MEMORY_STORE[project_id]
-        return ProjectResponse(
-            id=p["id"],
-            user_id=p["user_id"],
-            name=p["name"],
-            description=p.get("description"),
-            repo_url=p["repo_url"],
-            status=p["status"],
-            analysis_results=p.get("analysis_results"),
-            dockerfile_content=p.get("dockerfile_content"),
-            cicd_config=p.get("cicd_config"),
-            deployment_checklist_state=p.get("deployment_checklist_state"),
-            created_at=p["created_at"],
-            updated_at=p["updated_at"],
-        )
-
     sb = get_supabase_client()
     if sb:
         try:
@@ -465,7 +448,7 @@ async def get_project(
             )
             if response.data and len(response.data) > 0:
                 row = response.data[0]
-                return ProjectResponse(
+                resp = ProjectResponse(
                     id=str(row["id"]),
                     user_id=str(row["user_id"]),
                     name=row["name"],
@@ -479,8 +462,28 @@ async def get_project(
                     created_at=str(row["created_at"]),
                     updated_at=str(row["updated_at"]),
                 )
-        except Exception:
-            pass
+                # Keep local memory store synced with latest Supabase row
+                MEMORY_STORE[project_id] = resp.model_dump()
+                return resp
+        except Exception as e:
+            print(f"Supabase get_project query fallback: {e}")
+
+    if project_id in MEMORY_STORE:
+        p = MEMORY_STORE[project_id]
+        return ProjectResponse(
+            id=p["id"],
+            user_id=p["user_id"],
+            name=p["name"],
+            description=p.get("description"),
+            repo_url=p["repo_url"],
+            status=p.get("status", "created"),
+            analysis_results=p.get("analysis_results"),
+            dockerfile_content=p.get("dockerfile_content"),
+            cicd_config=p.get("cicd_config"),
+            deployment_checklist_state=p.get("deployment_checklist_state"),
+            created_at=p.get("created_at", ""),
+            updated_at=p.get("updated_at", ""),
+        )
 
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
