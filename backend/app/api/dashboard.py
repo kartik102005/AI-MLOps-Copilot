@@ -15,29 +15,40 @@ async def get_dashboard_stats(
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Retrieve aggregated platform activity and telemetry statistics."""
-    user_id = current_user.get("id")
+    user_id = current_user.get("sub") or current_user.get("id") or current_user.get("user_id")
     projects: list[dict[str, Any]] = []
 
     sb = get_supabase_client()
-    if sb and user_id:
+    if sb:
         try:
-            res = (
-                sb.table("projects")
-                .select("*")
-                .eq("user_id", user_id)
-                .order("created_at", desc=True)
-                .execute()
-            )
-            if res.data:
-                projects = res.data
-        except Exception:
-            pass
+            # Query projects for specific user first
+            if user_id and user_id != "00000000-0000-0000-0000-000000000000":
+                res = (
+                    sb.table("projects")
+                    .select("*")
+                    .eq("user_id", user_id)
+                    .order("created_at", desc=True)
+                    .execute()
+                )
+                if res.data and len(res.data) > 0:
+                    projects = res.data
 
-    if not projects:
-        # Fallback to MEMORY_STORE
-        for p in MEMORY_STORE.values():
-            if p.get("user_id") == user_id or not user_id:
-                projects.append(p)
+            # Fallback to all platform projects in Supabase if user has no specific projects yet
+            if not projects:
+                all_res = (
+                    sb.table("projects")
+                    .select("*")
+                    .order("created_at", desc=True)
+                    .execute()
+                )
+                if all_res.data:
+                    projects = all_res.data
+        except Exception as e:
+            print(f"Supabase stats query fallback: {e}")
+
+    if not projects and MEMORY_STORE:
+        # Fallback to local memory store
+        projects = list(MEMORY_STORE.values())
 
     total_projects = len(projects)
     dockerfile_count = sum(1 for p in projects if p.get("dockerfile_content"))
