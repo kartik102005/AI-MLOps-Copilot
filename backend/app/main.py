@@ -22,12 +22,12 @@ app = FastAPI(
 )
 
 # CORS configuration
-cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173")
-cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
+cors_origins_str = os.getenv("CORS_ORIGINS", "*")
+cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=cors_origins if cors_origins else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

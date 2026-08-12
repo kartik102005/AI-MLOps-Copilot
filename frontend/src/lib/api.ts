@@ -1,6 +1,9 @@
 /**
  * Helper function for making API requests with optional Authorization header.
+ * Resolves VITE_API_URL dynamically for production cloud deployments (Vercel -> Render).
  */
+const BASE_URL = (import.meta.env.VITE_API_URL as string) || ''
+
 export async function fetchApi(
   url: string,
   options: RequestInit = {},
@@ -16,7 +19,12 @@ export async function fetchApi(
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  return fetch(url, {
+  const finalUrl =
+    url.startsWith('/') && BASE_URL
+      ? `${BASE_URL.replace(/\/$/, '')}${url}`
+      : url
+
+  return fetch(finalUrl, {
     ...options,
     headers,
   })
