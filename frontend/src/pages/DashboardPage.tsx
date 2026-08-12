@@ -71,15 +71,29 @@ export function DashboardPage() {
   const rawName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Developer'
   const userName = rawName.charAt(0).toUpperCase() + rawName.slice(1)
 
-  const totalProjects = stats?.total_projects ?? projects.length
-  const dockerCount = stats?.dockerfiles_generated ?? projects.filter((p) => p.dockerfile_content).length
-  const dockerPct = stats?.dockerfile_percentage ?? (totalProjects > 0 ? Math.round((dockerCount / totalProjects) * 100) : 0)
-  const cicdCount = stats?.cicd_pipelines_active ?? projects.filter((p) => p.cicd_config).length
-  const cicdPct = stats?.cicd_percentage ?? (totalProjects > 0 ? Math.round((cicdCount / totalProjects) * 100) : 0)
+  const totalProjects = Math.max(projects.length, stats?.total_projects ?? 0)
+  const dockerCount = Math.max(
+    projects.filter((p) => p.dockerfile_content).length,
+    stats?.dockerfiles_generated ?? 0
+  )
+  const dockerPct =
+    totalProjects > 0 ? Math.round((dockerCount / totalProjects) * 100) : 0
 
-  const readyCount = stats?.ready_projects_count ?? projects.filter((p) => p.dockerfile_content && p.cicd_config).length
-  const healthPct = stats?.health_percentage ?? (totalProjects > 0 ? Math.round((readyCount / totalProjects) * 100) : 0)
-  const healthStatus = stats?.health_status ?? (healthPct >= 80 ? 'Optimal' : healthPct >= 40 ? 'Moderate' : 'Setup Needed')
+  const cicdCount = Math.max(
+    projects.filter((p) => p.cicd_config).length,
+    stats?.cicd_pipelines_active ?? 0
+  )
+  const cicdPct =
+    totalProjects > 0 ? Math.round((cicdCount / totalProjects) * 100) : 0
+
+  const readyCount = Math.max(
+    projects.filter((p) => p.dockerfile_content && p.cicd_config).length,
+    stats?.ready_projects_count ?? 0
+  )
+  const healthPct =
+    totalProjects > 0 ? Math.round((readyCount / totalProjects) * 100) : 0
+  const healthStatus =
+    healthPct >= 80 ? 'Optimal' : healthPct >= 40 ? 'Moderate' : 'Setup Needed'
 
   return (
     <AppLayout>
