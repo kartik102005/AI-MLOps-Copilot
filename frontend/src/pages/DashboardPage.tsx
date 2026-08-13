@@ -16,30 +16,11 @@ import {
   IconPlus,
 } from '../components/ui/Icons'
 
-interface DashboardStats {
-  total_projects: number
-  dockerfiles_generated: number
-  dockerfile_percentage: number
-  cicd_pipelines_active: number
-  cicd_percentage: number
-  ready_projects_count: number
-  health_percentage: number
-  health_status: string
-  frameworks_breakdown: Record<string, number>
-  recent_projects: Project[]
-}
+
 
 export function DashboardPage() {
   const { user, session } = useAuth()
 
-  const [stats, setStats] = useState<DashboardStats | null>(() => {
-    try {
-      const cached = localStorage.getItem('cached_dashboard_stats')
-      return cached ? JSON.parse(cached) : null
-    } catch {
-      return null
-    }
-  })
   const [projects, setProjects] = useState<Project[]>(() => {
     try {
       const cached = localStorage.getItem('cached_dashboard_projects')
@@ -52,18 +33,7 @@ export function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const [statsRes, projRes] = await Promise.all([
-        fetchApi('/api/dashboard/stats', {}, session?.access_token),
-        fetchApi('/api/projects', {}, session?.access_token),
-      ])
-
-      if (statsRes.ok) {
-        const statsData = await statsRes.json()
-        setStats(statsData)
-        try {
-          localStorage.setItem('cached_dashboard_stats', JSON.stringify(statsData))
-        } catch {}
-      }
+      const projRes = await fetchApi('/api/projects', {}, session?.access_token)
       if (projRes.ok) {
         const projData = await projRes.json()
         const items = Array.isArray(projData) ? projData : []
@@ -92,25 +62,16 @@ export function DashboardPage() {
   const rawName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Developer'
   const userName = rawName.charAt(0).toUpperCase() + rawName.slice(1)
 
-  const totalProjects = Math.max(projects.length, stats?.total_projects ?? 0)
-  const dockerCount = Math.max(
-    projects.filter((p) => p.dockerfile_content).length,
-    stats?.dockerfiles_generated ?? 0
-  )
+  const totalProjects = projects.length
+  const dockerCount = projects.filter((p) => p.dockerfile_content).length
   const dockerPct =
     totalProjects > 0 ? Math.round((dockerCount / totalProjects) * 100) : 0
 
-  const cicdCount = Math.max(
-    projects.filter((p) => p.cicd_config).length,
-    stats?.cicd_pipelines_active ?? 0
-  )
+  const cicdCount = projects.filter((p) => p.cicd_config).length
   const cicdPct =
     totalProjects > 0 ? Math.round((cicdCount / totalProjects) * 100) : 0
 
-  const readyCount = Math.max(
-    projects.filter((p) => p.dockerfile_content && p.cicd_config).length,
-    stats?.ready_projects_count ?? 0
-  )
+  const readyCount = projects.filter((p) => p.dockerfile_content && p.cicd_config).length
   const healthPct =
     totalProjects > 0 ? Math.round((readyCount / totalProjects) * 100) : 0
   const healthStatus =
