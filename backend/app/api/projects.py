@@ -174,7 +174,6 @@ async def create_project(
     MEMORY_STORE[project_id] = new_project
     _save_memory_store()
 
-    # Attempt Supabase insert in background / sync if available
     sb = get_supabase_client()
     if sb:
         try:
@@ -183,13 +182,18 @@ async def create_project(
                 row = res.data[0]
                 sb_id = str(row["id"])
                 if sb_id != project_id:
-                    # Sync ID if Supabase generated a different UUID
                     MEMORY_STORE[sb_id] = new_project
                     MEMORY_STORE[sb_id]["id"] = sb_id
                     _save_memory_store()
                     project_id = sb_id
         except Exception as e:
-            print(f"Supabase insert fallback to local store: {e}")
+            print(f"Supabase insert fallback: {e}")
+            try:
+                # Strip optional fields if schema cache is reloading
+                clean_project = {k: v for k, v in new_project.items() if k not in {"deployment_checklist_state", "github_token_encrypted"}}
+                res = sb.table("projects").insert(clean_project).execute()
+            except Exception as retry_err:
+                print(f"Supabase retry insert error: {retry_err}")
 
     # Trigger background clone task
     background_tasks.add_task(
@@ -224,11 +228,11 @@ async def list_projects(
     sb = get_supabase_client()
     if sb:
         try:
-            # High performance indexed user query with strict limit(50)
+            # High performance indexed user query using select("*") for dynamic schema safety
             if user_id and user_id != "00000000-0000-0000-0000-000000000000":
                 res = (
                     sb.table("projects")
-                    .select("id, user_id, name, description, repo_url, status, analysis_results, dockerfile_content, cicd_config, deployment_checklist_state, created_at, updated_at")
+                    .select("*")
                     .eq("user_id", user_id)
                     .order("updated_at", desc=True)
                     .limit(50)
@@ -258,7 +262,7 @@ async def list_projects(
             if not combined_projects:
                 all_res = (
                     sb.table("projects")
-                    .select("id, user_id, name, description, repo_url, status, analysis_results, dockerfile_content, cicd_config, deployment_checklist_state, created_at, updated_at")
+                    .select("*")
                     .order("updated_at", desc=True)
                     .limit(20)
                     .execute()
