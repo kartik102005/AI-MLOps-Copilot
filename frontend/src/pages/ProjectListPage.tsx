@@ -31,8 +31,22 @@ export interface Project {
 
 export const ProjectListPage: React.FC = () => {
   const { session } = useAuth()
-  const [projects, setProjects] = useState<Project[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [projects, setProjects] = useState<Project[]>(() => {
+    try {
+      const cached = localStorage.getItem('cached_projects_list')
+      return cached ? JSON.parse(cached) : []
+    } catch {
+      return []
+    }
+  })
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    try {
+      const cached = localStorage.getItem('cached_projects_list')
+      return !cached
+    } catch {
+      return true
+    }
+  })
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -42,7 +56,9 @@ export const ProjectListPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const fetchProjects = async () => {
-    setIsLoading(true)
+    if (projects.length === 0) {
+      setIsLoading(true)
+    }
     setError(null)
     try {
       const response = await fetchApi('/api/projects', {}, session?.access_token)
@@ -60,8 +76,13 @@ export const ProjectListPage: React.FC = () => {
         (a: Project, b: Project) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       )
       setProjects(sorted)
+      try {
+        localStorage.setItem('cached_projects_list', JSON.stringify(sorted))
+      } catch {}
     } catch (err) {
-      setError('An error occurred while fetching projects.')
+      if (projects.length === 0) {
+        setError('An error occurred while fetching projects.')
+      }
     } finally {
       setIsLoading(false)
     }

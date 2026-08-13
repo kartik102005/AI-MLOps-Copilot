@@ -32,8 +32,22 @@ interface DashboardStats {
 export function DashboardPage() {
   const { user, session } = useAuth()
 
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [projects, setProjects] = useState<Project[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(() => {
+    try {
+      const cached = localStorage.getItem('cached_dashboard_stats')
+      return cached ? JSON.parse(cached) : null
+    } catch {
+      return null
+    }
+  })
+  const [projects, setProjects] = useState<Project[]>(() => {
+    try {
+      const cached = localStorage.getItem('cached_dashboard_projects')
+      return cached ? JSON.parse(cached) : []
+    } catch {
+      return []
+    }
+  })
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false)
 
   const fetchDashboardData = async () => {
@@ -46,10 +60,17 @@ export function DashboardPage() {
       if (statsRes.ok) {
         const statsData = await statsRes.json()
         setStats(statsData)
+        try {
+          localStorage.setItem('cached_dashboard_stats', JSON.stringify(statsData))
+        } catch {}
       }
       if (projRes.ok) {
         const projData = await projRes.json()
-        setProjects(Array.isArray(projData) ? projData : [])
+        const items = Array.isArray(projData) ? projData : []
+        setProjects(items)
+        try {
+          localStorage.setItem('cached_dashboard_projects', JSON.stringify(items))
+        } catch {}
       }
     } catch (err) {
       console.error('Failed to load dashboard telemetry', err)

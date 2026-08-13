@@ -21,30 +21,18 @@ async def get_dashboard_stats(
     sb = get_supabase_client()
     if sb:
         try:
-            # Query projects for specific user first
-            if user_id and user_id != "00000000-0000-0000-0000-000000000000":
-                res = (
-                    sb.table("projects")
-                    .select("*")
-                    .eq("user_id", user_id)
-                    .order("created_at", desc=True)
-                    .execute()
-                )
-                if res.data and len(res.data) > 0:
-                    projects = res.data
-
-            # Fallback to all platform projects in Supabase if user has no specific projects yet
-            if not projects:
-                all_res = (
-                    sb.table("projects")
-                    .select("*")
-                    .order("created_at", desc=True)
-                    .execute()
-                )
-                if all_res.data:
-                    projects = all_res.data
+            # Single optimized query to fetch all projects in 1 HTTP roundtrip
+            res = (
+                sb.table("projects")
+                .select("id, user_id, dockerfile_content, cicd_config, analysis_results, created_at")
+                .order("created_at", desc=True)
+                .execute()
+            )
+            if res.data:
+                user_projs = [p for p in res.data if user_id and str(p.get("user_id")) == str(user_id)]
+                projects = user_projs if user_projs else res.data
         except Exception as e:
-            print(f"Supabase stats query fallback: {e}")
+            print(f"Supabase stats single query fallback: {e}")
 
     if not projects and MEMORY_STORE:
         # Fallback to local memory store

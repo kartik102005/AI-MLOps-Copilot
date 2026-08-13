@@ -230,21 +230,23 @@ async def list_projects(
     sb = get_supabase_client()
     if sb:
         try:
-            # Query projects belonging to user
+            # Single optimized query to fetch platform projects from Supabase in 1 HTTP roundtrip
             response = (
                 sb.table("projects")
-                .select("*")
-                .eq("user_id", user_id)
+                .select("id, user_id, name, description, repo_url, status, analysis_results, dockerfile_content, cicd_config, deployment_checklist_state, created_at, updated_at")
                 .order("updated_at", desc=True)
                 .execute()
             )
 
-            if response.data and len(response.data) > 0:
+            if response.data:
+                user_matches = []
+                other_matches = []
                 for row in response.data:
                     pid = str(row["id"])
-                    combined_projects[pid] = {
+                    row_user = str(row.get("user_id", ""))
+                    item = {
                         "id": pid,
-                        "user_id": str(row["user_id"]),
+                        "user_id": row_user,
                         "name": row["name"],
                         "description": row.get("description"),
                         "repo_url": row["repo_url"],
@@ -253,37 +255,20 @@ async def list_projects(
                         "dockerfile_content": row.get("dockerfile_content"),
                         "cicd_config": row.get("cicd_config"),
                         "deployment_checklist_state": row.get("deployment_checklist_state"),
-                        "created_at": str(row["created_at"]),
-                        "updated_at": str(row["updated_at"]),
+                        "created_at": str(row.get("created_at", "")),
+                        "updated_at": str(row.get("updated_at", "")),
                     }
+                    MEMORY_STORE[pid] = item
+                    if user_id and row_user == str(user_id):
+                        user_matches.append(item)
+                    else:
+                        other_matches.append(item)
 
-            # If user has no specific projects yet, fetch all platform projects from Supabase
-            if not combined_projects:
-                all_resp = (
-                    sb.table("projects")
-                    .select("*")
-                    .order("updated_at", desc=True)
-                    .execute()
-                )
-                if all_resp.data:
-                    for row in all_resp.data:
-                        pid = str(row["id"])
-                        combined_projects[pid] = {
-                            "id": pid,
-                            "user_id": str(row["user_id"]),
-                            "name": row["name"],
-                            "description": row.get("description"),
-                            "repo_url": row["repo_url"],
-                            "status": row.get("status", "created"),
-                            "analysis_results": row.get("analysis_results"),
-                            "dockerfile_content": row.get("dockerfile_content"),
-                            "cicd_config": row.get("cicd_config"),
-                            "deployment_checklist_state": row.get("deployment_checklist_state"),
-                            "created_at": str(row["created_at"]),
-                            "updated_at": str(row["updated_at"]),
-                        }
+                target_items = user_matches if user_matches else (other_matches if not user_id or user_id == "00000000-0000-0000-0000-000000000000" or not user_matches else [])
+                for item in (user_matches or other_matches):
+                    combined_projects[item["id"]] = item
         except Exception as e:
-            print(f"Supabase select fallback: {e}")
+            print(f"Supabase list_projects single query error: {e}")
 
     # Fallback: if no project matched specific user_id, return all available projects in MEMORY_STORE
     if not combined_projects and MEMORY_STORE:
