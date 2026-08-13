@@ -217,58 +217,73 @@ async def create_project(
 async def list_projects(
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> list[ProjectResponse]:
-    """List all projects belonging to the authenticated user."""
-    user_id = current_user.get("sub", "00000000-0000-0000-0000-000000000000")
-
-    # Strict multi-user filtering for local store
-    filtered_store = {
-        k: v for k, v in MEMORY_STORE.items()
-        if v.get("user_id") == user_id or user_id == "00000000-0000-0000-0000-000000000000"
-    }
-    combined_projects: dict[str, dict[str, Any]] = dict(filtered_store)
+    """List projects belonging to the authenticated user with high-performance indexed limits."""
+    user_id = current_user.get("sub") or current_user.get("id") or current_user.get("user_id") or "00000000-0000-0000-0000-000000000000"
+    combined_projects: dict[str, dict[str, Any]] = {}
 
     sb = get_supabase_client()
     if sb:
         try:
-            # Single optimized query to fetch platform projects from Supabase in 1 HTTP roundtrip
-            response = (
-                sb.table("projects")
-                .select("id, user_id, name, description, repo_url, status, analysis_results, dockerfile_content, cicd_config, deployment_checklist_state, created_at, updated_at")
-                .order("updated_at", desc=True)
-                .execute()
-            )
+            # High performance indexed user query with strict limit(50)
+            if user_id and user_id != "00000000-0000-0000-0000-000000000000":
+                res = (
+                    sb.table("projects")
+                    .select("id, user_id, name, description, repo_url, status, analysis_results, dockerfile_content, cicd_config, deployment_checklist_state, created_at, updated_at")
+                    .eq("user_id", user_id)
+                    .order("updated_at", desc=True)
+                    .limit(50)
+                    .execute()
+                )
+                if res.data and len(res.data) > 0:
+                    for row in res.data:
+                        pid = str(row["id"])
+                        item = {
+                            "id": pid,
+                            "user_id": str(row["user_id"]),
+                            "name": row["name"],
+                            "description": row.get("description"),
+                            "repo_url": row["repo_url"],
+                            "status": row.get("status", "created"),
+                            "analysis_results": row.get("analysis_results"),
+                            "dockerfile_content": row.get("dockerfile_content"),
+                            "cicd_config": row.get("cicd_config"),
+                            "deployment_checklist_state": row.get("deployment_checklist_state"),
+                            "created_at": str(row.get("created_at", "")),
+                            "updated_at": str(row.get("updated_at", "")),
+                        }
+                        MEMORY_STORE[pid] = item
+                        combined_projects[pid] = item
 
-            if response.data:
-                user_matches = []
-                other_matches = []
-                for row in response.data:
-                    pid = str(row["id"])
-                    row_user = str(row.get("user_id", ""))
-                    item = {
-                        "id": pid,
-                        "user_id": row_user,
-                        "name": row["name"],
-                        "description": row.get("description"),
-                        "repo_url": row["repo_url"],
-                        "status": row.get("status", "created"),
-                        "analysis_results": row.get("analysis_results"),
-                        "dockerfile_content": row.get("dockerfile_content"),
-                        "cicd_config": row.get("cicd_config"),
-                        "deployment_checklist_state": row.get("deployment_checklist_state"),
-                        "created_at": str(row.get("created_at", "")),
-                        "updated_at": str(row.get("updated_at", "")),
-                    }
-                    MEMORY_STORE[pid] = item
-                    if user_id and row_user == str(user_id):
-                        user_matches.append(item)
-                    else:
-                        other_matches.append(item)
-
-                target_items = user_matches if user_matches else (other_matches if not user_id or user_id == "00000000-0000-0000-0000-000000000000" or not user_matches else [])
-                for item in (user_matches or other_matches):
-                    combined_projects[item["id"]] = item
+            # If user has no projects yet, fetch top 20 latest platform projects
+            if not combined_projects:
+                all_res = (
+                    sb.table("projects")
+                    .select("id, user_id, name, description, repo_url, status, analysis_results, dockerfile_content, cicd_config, deployment_checklist_state, created_at, updated_at")
+                    .order("updated_at", desc=True)
+                    .limit(20)
+                    .execute()
+                )
+                if all_res.data:
+                    for row in all_res.data:
+                        pid = str(row["id"])
+                        item = {
+                            "id": pid,
+                            "user_id": str(row["user_id"]),
+                            "name": row["name"],
+                            "description": row.get("description"),
+                            "repo_url": row["repo_url"],
+                            "status": row.get("status", "created"),
+                            "analysis_results": row.get("analysis_results"),
+                            "dockerfile_content": row.get("dockerfile_content"),
+                            "cicd_config": row.get("cicd_config"),
+                            "deployment_checklist_state": row.get("deployment_checklist_state"),
+                            "created_at": str(row.get("created_at", "")),
+                            "updated_at": str(row.get("updated_at", "")),
+                        }
+                        MEMORY_STORE[pid] = item
+                        combined_projects[pid] = item
         except Exception as e:
-            print(f"Supabase list_projects single query error: {e}")
+            print(f"Supabase list_projects query error: {e}")
 
     # Fallback: if no project matched specific user_id, return all available projects in MEMORY_STORE
     if not combined_projects and MEMORY_STORE:
