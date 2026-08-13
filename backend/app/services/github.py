@@ -98,19 +98,96 @@ def clone_repo(repo_url: str, dest_dir: str, token: str | None = None) -> dict[s
         return {"success": False, "error": f"Clone exception: {str(e)}"}
 
 
-def list_repo_files(dest_dir: str) -> list[str]:
-    """Walk cloned directory and return list of relative file paths."""
-    if not os.path.exists(dest_dir):
+def parse_repo_owner_name(repo_url: str) -> tuple[str | None, str | None]:
+    """Extract (owner, repo) from GitHub URL."""
+    clean_url = repo_url.strip()
+    if clean_url.endswith(".git"):
+        clean_url = clean_url[:-4]
+    match = re.search(r"github\.com\/([^\/]+)\/([^\/]+)", clean_url)
+    if match:
+        return match.group(1), match.group(2)
+    return None, None
+
+
+def fetch_remote_repo_tree(repo_url: str, token: str | None = None) -> list[str]:
+    """Fetch repository file tree directly via GitHub REST API."""
+    owner, repo = parse_repo_owner_name(repo_url)
+    if not owner or not repo:
         return []
 
-    file_list = []
-    ignored_dirs = {".git", "__pycache__", "node_modules", ".venv", "venv", ".idea", ".vscode"}
+    headers = {
+        "User-Agent": "MLOps-Copilot-App",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    if token and token.strip():
+        headers["Authorization"] = f"Bearer {token.strip()}"
 
-    for root, dirs, files in os.walk(dest_dir):
-        dirs[:] = [d for d in dirs if d not in ignored_dirs]
-        for file in files:
-            full_path = os.path.join(root, file)
-            rel_path = os.path.relpath(full_path, dest_dir).replace("\\", "/")
-            file_list.append(rel_path)
+    for branch in ["main", "master", "HEAD"]:
+        api_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{branch}?recursive=1"
+        req = urllib.request.Request(api_url, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=10) as response:
+                if response.status == 200:
+                    import json
+                    data = json.loads(response.read().decode("utf-8"))
+                    tree = data.get("tree", [])
+                    ignored_dirs = {".git", "__pycache__", "node_modules", ".venv", "venv"}
+                    file_list = []
+                    for item in tree:
+                        if item.get("type") == "blob":
+                            path = item.get("path", "")
+                            parts = path.split("/")
+                            if not any(part in ignored_dirs for part in parts):
+                                file_list.append(path)
+                    if file_list:
+                        return sorted(file_list)
+        except Exception:
+            continue
 
-    return sorted(file_list)
+    return []
+
+
+def fetch_remote_file_content(repo_url: str, file_path: str, token: str | None = None) -> str | None:
+    """Fetch a single file's content directly from raw GitHub."""
+    owner, repo = parse_repo_owner_name(repo_url)
+    if not owner or not repo:
+        return None
+
+    headers = {"User-Agent": "MLOps-Copilot-App"}
+    if token and token.strip():
+        headers["Authorization"] = f"Bearer {token.strip()}"
+
+    for branch in ["main", "master"]:
+        raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{file_path}"
+        req = urllib.request.Request(raw_url, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=10) as response:
+                if response.status == 200:
+                    return response.read().decode("utf-8", errors="ignore")
+        except Exception:
+            continue
+
+    return None
+
+
+def list_repo_files(dest_dir: str, repo_url: str | None = None, token: str | None = None) -> list[str]:
+    """Walk cloned directory and return list of relative file paths, falling back to GitHub API."""
+    if os.path.exists(dest_dir):
+        file_list = []
+        ignored_dirs = {".git", "__pycache__", "node_modules", ".venv", "venv", ".idea", ".vscode"}
+
+        for root, dirs, files in os.walk(dest_dir):
+            dirs[:] = [d for d in dirs if d not in ignored_dirs]
+            for file in files:
+                full_path = os.path.join(root, file)
+                rel_path = os.path.relpath(full_path, dest_dir).replace("\\", "/")
+                file_list.append(rel_path)
+
+        if file_list:
+            return sorted(file_list)
+
+    # Fallback to remote GitHub API if local clone is missing
+    if repo_url:
+        return fetch_remote_repo_tree(repo_url, token)
+
+    return []

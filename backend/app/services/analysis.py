@@ -7,24 +7,13 @@ import json
 from typing import Any
 import openai
 
-def analyze_repository(dest_dir: str) -> dict[str, Any]:
+def analyze_repository(dest_dir: str, repo_url: str | None = None, token: str | None = None) -> dict[str, Any]:
     """
-    Analyze a cloned repository using file inspection and OpenAI-compatible API.
+    Analyze a cloned or remote repository using file inspection and OpenAI-compatible API.
 
     Returns:
         dict containing summary, language, framework, dependencies, entry_points, tech_stack.
     """
-    if not os.path.exists(dest_dir):
-        return {
-            "summary": "Repository path not found.",
-            "language": "Unknown",
-            "framework": "Unknown",
-            "dependencies": [],
-            "entry_points": [],
-            "tech_stack": ["Unknown"],
-        }
-
-    # 1. Inspect repository file structure and key config files
     file_list = []
     dependencies = []
     language = "Python"
@@ -37,22 +26,45 @@ def analyze_repository(dest_dir: str) -> dict[str, Any]:
     has_package_json = False
     has_dockerfile = False
 
-    for root, dirs, files in os.walk(dest_dir):
-        # Ignore hidden/build dirs
-        dirs[:] = [d for d in dirs if d not in {".git", "__pycache__", "node_modules", ".venv", "venv"}]
-        for f in files:
-            rel_file = os.path.relpath(os.path.join(root, f), dest_dir).replace("\\", "/")
-            file_list.append(rel_file)
+    if os.path.exists(dest_dir):
+        for root, dirs, files in os.walk(dest_dir):
+            dirs[:] = [d for d in dirs if d not in {".git", "__pycache__", "node_modules", ".venv", "venv"}]
+            for f in files:
+                rel_file = os.path.relpath(os.path.join(root, f), dest_dir).replace("\\", "/")
+                file_list.append(rel_file)
 
+                file_lower = f.lower()
+                if file_lower == "requirements.txt":
+                    has_requirements = True
+                    try:
+                        with open(os.path.join(root, f), "r", encoding="utf-8", errors="ignore") as file_obj:
+                            lines = [line.strip() for line in file_obj if line.strip() and not line.startswith("#")]
+                            dependencies.extend(lines[:15])
+                    except Exception:
+                        pass
+                elif file_lower == "package.json":
+                    has_package_json = True
+                    language = "JavaScript / TypeScript"
+                elif file_lower == "pyproject.toml":
+                    has_pyproject = True
+                elif file_lower == "dockerfile":
+                    has_dockerfile = True
+                    tech_stack.append("Docker")
+
+                if file_lower in {"main.py", "app.py", "server.py", "index.js", "index.ts", "train.py", "model.py"}:
+                    entry_points.append(rel_file)
+    elif repo_url:
+        from .github import fetch_remote_repo_tree, fetch_remote_file_content
+        file_list = fetch_remote_repo_tree(repo_url, token)
+        for rel_file in file_list:
+            f = os.path.basename(rel_file)
             file_lower = f.lower()
             if file_lower == "requirements.txt":
                 has_requirements = True
-                try:
-                    with open(os.path.join(root, f), "r", encoding="utf-8", errors="ignore") as file_obj:
-                        lines = [line.strip() for line in file_obj if line.strip() and not line.startswith("#")]
-                        dependencies.extend(lines[:15])
-                except Exception:
-                    pass
+                content = fetch_remote_file_content(repo_url, rel_file, token)
+                if content:
+                    lines = [line.strip() for line in content.splitlines() if line.strip() and not line.startswith("#")]
+                    dependencies.extend(lines[:15])
             elif file_lower == "package.json":
                 has_package_json = True
                 language = "JavaScript / TypeScript"
@@ -64,6 +76,15 @@ def analyze_repository(dest_dir: str) -> dict[str, Any]:
 
             if file_lower in {"main.py", "app.py", "server.py", "index.js", "index.ts", "train.py", "model.py"}:
                 entry_points.append(rel_file)
+    else:
+        return {
+            "summary": "Repository empty or unreadable.",
+            "language": "Python",
+            "framework": "Django / FastAPI",
+            "dependencies": [],
+            "entry_points": [],
+            "tech_stack": ["Python"],
+        }
 
     if has_requirements or has_pyproject:
         language = "Python"

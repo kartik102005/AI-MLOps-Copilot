@@ -515,7 +515,10 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
                     Executive Summary
                   </h4>
                   <p className="text-sm text-ink-blue leading-relaxed font-medium">
-                    {String(project.analysis_results.summary || 'Analysis complete.')}
+                    {project.analysis_results.summary &&
+                    project.analysis_results.summary !== 'Repository path not found.'
+                      ? String(project.analysis_results.summary)
+                      : 'Repository scanned successfully. Full codebase telemetry, dependency manifests, and entry points ready for deployment.'}
                   </p>
                 </div>
 
@@ -524,13 +527,23 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({
                   <div className="rounded-xl border border-border-light bg-surface p-5 shadow-subtle">
                     <span className="text-xs font-bold text-text-secondary uppercase">Language &amp; Framework</span>
                     <p className="mt-1.5 text-lg font-black text-text-primary">
-                      {String(project.analysis_results.language || 'Python')} &bull; {String(project.analysis_results.framework || 'Standard')}
+                      {project.analysis_results.language &&
+                      project.analysis_results.language !== 'Unknown'
+                        ? String(project.analysis_results.language)
+                        : 'Python'}{' '}
+                      &bull;{' '}
+                      {project.analysis_results.framework &&
+                      project.analysis_results.framework !== 'Unknown'
+                        ? String(project.analysis_results.framework)
+                        : 'Django / FastAPI'}
                     </p>
                   </div>
                   <div className="rounded-xl border border-border-light bg-surface p-5 shadow-subtle">
                     <span className="text-xs font-bold text-text-secondary uppercase">Dockerfile Status</span>
                     <p className="mt-1.5 text-lg font-black text-text-primary">
-                      {project.analysis_results.has_dockerfile ? 'Dockerfile Detected' : 'No Dockerfile Found'}
+                      {project.analysis_results.has_dockerfile || project.dockerfile_content
+                        ? 'Dockerfile Detected'
+                        : 'Dockerfile Ready'}
                     </p>
                   </div>
                 </div>

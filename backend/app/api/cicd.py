@@ -34,21 +34,32 @@ async def generate_workflows(
     """Generate CI and CD workflows for a project using AI analysis."""
     project_id = payload.project_id
 
-    # Look up project in memory store
     project = MEMORY_STORE.get(project_id)
+    if not project:
+        sb = get_supabase_client()
+        if sb:
+            try:
+                res = sb.table("projects").select("*").eq("id", project_id).execute()
+                if res.data and len(res.data) > 0:
+                    project = res.data[0]
+            except Exception:
+                pass
+
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Project not found",
         )
 
-    # Check that analysis exists
+    # Check that analysis exists and is valid
     analysis = project.get("analysis_results")
-    if not analysis:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Project has not been analyzed yet",
-        )
+    if not analysis or analysis.get("summary") == "Repository path not found.":
+        from ..services.analysis import analyze_repository
+        dest_dir = os.path.join(os.getcwd(), "clones", project_id)
+        repo_url = project.get("repo_url")
+        token = project.get("github_token_encrypted")
+        analysis = analyze_repository(dest_dir, repo_url=repo_url, token=token)
+        project["analysis_results"] = analysis
 
     # Generate workflows
     result = generator.generate(analysis, custom_prompt=payload.custom_prompt)

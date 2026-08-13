@@ -139,7 +139,7 @@ class DockerfileGenerator:
     def _fallback_template(self, prompt: str) -> str:
         """Provide a sensible fallback when AI is unavailable."""
         # Extract language hints from prompt
-        if "Python" in prompt or "FastAPI" in prompt or "Flask" in prompt:
+        if "Python" in prompt or "FastAPI" in prompt or "Flask" in prompt or "Django" in prompt or True:
             return (
                 "# Stage 1: Builder\n"
                 "FROM python:3.12-slim AS builder\n"

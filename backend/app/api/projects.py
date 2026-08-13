@@ -357,8 +357,23 @@ async def get_project_files(
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Return repository file tree."""
+    p = MEMORY_STORE.get(project_id)
+    repo_url = p.get("repo_url") if p else None
+    token = p.get("github_token_encrypted") if p else None
+
+    if not repo_url:
+        sb = get_supabase_client()
+        if sb:
+            try:
+                res = sb.table("projects").select("repo_url, github_token_encrypted").eq("id", project_id).execute()
+                if res.data and len(res.data) > 0:
+                    repo_url = res.data[0].get("repo_url")
+                    token = res.data[0].get("github_token_encrypted")
+            except Exception:
+                pass
+
     dest_dir = os.path.join(os.getcwd(), "clones", project_id)
-    files = list_repo_files(dest_dir)
+    files = list_repo_files(dest_dir, repo_url=repo_url, token=token)
     return {"project_id": project_id, "files": files}
 
 
@@ -368,8 +383,23 @@ async def analyze_project(
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> ProjectResponse:
     """Trigger AI analysis on cloned repository."""
+    p = MEMORY_STORE.get(project_id)
+    repo_url = p.get("repo_url") if p else None
+    token = p.get("github_token_encrypted") if p else None
+
+    if not repo_url:
+        sb = get_supabase_client()
+        if sb:
+            try:
+                res = sb.table("projects").select("repo_url, github_token_encrypted").eq("id", project_id).execute()
+                if res.data and len(res.data) > 0:
+                    repo_url = res.data[0].get("repo_url")
+                    token = res.data[0].get("github_token_encrypted")
+            except Exception:
+                pass
+
     dest_dir = os.path.join(os.getcwd(), "clones", project_id)
-    analysis_data = analyze_repository(dest_dir)
+    analysis_data = analyze_repository(dest_dir, repo_url=repo_url, token=token)
 
     if project_id in MEMORY_STORE:
         MEMORY_STORE[project_id]["analysis_results"] = analysis_data
