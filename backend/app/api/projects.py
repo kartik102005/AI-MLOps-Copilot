@@ -487,6 +487,24 @@ async def get_project(
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> ProjectResponse:
     """Get project details by project ID."""
+    # Instant sub-10ms response from in-memory store if cached
+    if project_id in MEMORY_STORE:
+        p = MEMORY_STORE[project_id]
+        return ProjectResponse(
+            id=p["id"],
+            user_id=p["user_id"],
+            name=p["name"],
+            description=p.get("description"),
+            repo_url=p["repo_url"],
+            status=p.get("status", "created"),
+            analysis_results=p.get("analysis_results"),
+            dockerfile_content=p.get("dockerfile_content"),
+            cicd_config=p.get("cicd_config"),
+            deployment_checklist_state=p.get("deployment_checklist_state"),
+            created_at=p.get("created_at", ""),
+            updated_at=p.get("updated_at", ""),
+        )
+
     sb = get_supabase_client()
     if sb:
         try:
@@ -512,7 +530,6 @@ async def get_project(
                     created_at=str(row["created_at"]),
                     updated_at=str(row["updated_at"]),
                 )
-                # Keep local memory store synced with latest Supabase row
                 MEMORY_STORE[project_id] = resp.model_dump()
                 return resp
         except Exception as e:

@@ -13,28 +13,42 @@ export const ProjectDetailPage: React.FC = () => {
   const navigate = useNavigate()
   const { session } = useAuth()
 
-  const [project, setProject] = useState<Project | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [project, setProject] = useState<Project | null>(() => {
+    try {
+      const cached = localStorage.getItem('cached_dashboard_projects')
+      if (cached && id) {
+        const list = JSON.parse(cached)
+        if (Array.isArray(list)) {
+          const found = list.find((p: any) => p.id === id)
+          if (found) return found
+        }
+      }
+    } catch {}
+    return null
+  })
+  const [isLoading, setIsLoading] = useState<boolean>(() => !project)
   const [error, setError] = useState<string | null>(null)
 
   const fetchProject = async () => {
     if (!id) return
-    setIsLoading(true)
+    if (!project) setIsLoading(true)
     setError(null)
     try {
       const res = await fetchApi(`/api/projects/${id}`, {}, session?.access_token)
       if (!res.ok) {
-        if (res.status === 404) {
-          setError('Project not found')
-        } else {
-          setError('Failed to load project details')
+        if (!project) {
+          if (res.status === 404) {
+            setError('Project not found')
+          } else {
+            setError('Failed to load project details')
+          }
         }
         return
       }
       const data = await res.json()
       setProject(data)
     } catch (err) {
-      setError('An error occurred while fetching project')
+      if (!project) setError('An error occurred while fetching project')
     } finally {
       setIsLoading(false)
     }
