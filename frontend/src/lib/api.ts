@@ -2,7 +2,8 @@
  * Helper function for making API requests with optional Authorization header.
  * Resolves VITE_API_URL dynamically for production cloud deployments (Vercel -> Render).
  */
-const BASE_URL = (import.meta.env.VITE_API_URL as string) || ''
+const DEFAULT_API_URL = 'https://mlops-copilot-api.onrender.com'
+const BASE_URL = (import.meta.env.VITE_API_URL as string) || (import.meta.env.PROD ? DEFAULT_API_URL : '')
 
 export async function fetchApi(
   url: string,
